@@ -1,0 +1,23 @@
+{% include "base2.html" %}
+{% block content %}
+<div class="container my-3"> 
+    {% if data and filename %}
+    <h1> {{ filename }} </h1>
+    <canvas hidden id="paint" width="750" height="450" style="border: 5px solid #000000;"></canvas>
+    <button id="show" class="btn btn-primary " onclick="view('{{ data }}')">View</button></p>
+
+    {% endif %}
+</div>
+<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+<script>
+    function view(data) {
+        var canvas = document.getElementById("paint");
+        var ctx = canvas.getContext("2d");
+        var newImg = document.createElement("img");
+        newImg.src = data;
+        document.body.appendChild(newImg);
+    }
+
+
+</script>
+{% endblock %}

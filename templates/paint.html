@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    * {
+        color: #666666 !important;
+    }
+
+
+
+    .tool {
+        display: inline-block;
+        background-color: rgba(242, 242, 242, 0.98);
+        border-radius: 50%;
+        -webkit-box-shadow: 0.1rem 0.1rem 0 rgb(0 0 0 / 25%);
+        box-shadow: 0.1rem 0.1rem 0 rgb(0 0 0 / 25%);
+        width: 50px;
+        margin: 1rem 0;
+        pointer-events: point;
+        display: -webkit-box;
+        display: -moz-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: box;
+        display: flex;
+        -webkit-box-pack: center;
+        -moz-box-pack: center;
+        -o-box-pack: center;
+        -ms-flex-pack: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -moz-box-align: center;
+        -o-box-align: center;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+
+    .toolbar {
+        display: inline-block;
+        position: fixed;
+        top: 14vh;
+        width: 4.5rem;
+        left: 2rem;
+        z-index: 99;
+        text-align: center;
+    }
+
+    .tool img {
+        width: 49px;
+    }
+
+    .main-canvas-container {
+        position: absolute;
+        background-color: #b3b3b3;
+        top: 6rem;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .main {
+        padding: 0;
+        margin: 0;
+        background-color: #b3b3b3;
+    }
+
+    .tool {
+        display: inline-block;
+        background-color: rgba(242, 242, 242, 0.98);
+        border-radius: 50%;
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        width: 3rem;
+        height: 3rem;
+        margin: 1rem 0;
+        pointer-events: auto;
+        position: relative;
+        display: -webkit-box;
+        display: -moz-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: box;
+        display: flex;
+        -webkit-box-pack: center;
+        -moz-box-pack: center;
+        -o-box-pack: center;
+        -ms-flex-pack: center;
+        -webkit-justify-content: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -moz-box-align: center;
+        -o-box-align: center;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+
+    .tool:first-child {
+        margin-top: 0
+    }
+
+    .tool img {
+        width: 100%
+    }
+
+    .tool label {
+        position: absolute;
+        pointer-events: none;
+        background-color: rgba(242, 242, 242, 0.98);
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        top: 50%;
+        left: 100%;
+        -webkit-transform: translateY(-50%);
+        -moz-transform: translateY(-50%);
+        -o-transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%);
+        margin-left: 1.2rem;
+        font-size: 1.4rem;
+        padding: .4rem .8rem;
+        border-radius: .4rem
+    }
+
+    .tool.active {
+        background-color: #000
+    }
+
+    .tool.disabled {
+        cursor: not-allowed;
+    }
+
+    .tool.disabled img {
+        opacity: .2;
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
+        filter: alpha(opacity=20)
+    }
+
+    .tool.pointer {
+        margin-bottom: 4vh
+    }
+
+    .tool.swatch {
+        padding: 2px
+    }
+
+    .tool.swatch,
+    .tool.zoom {
+        margin-top: 4vh
+    }
+
+    .nontouch .tool:hover {
+        background-color: #e6e6e6;
+    }
+
+    .nontouch .tool:hover.active {
+        background-color: #000
+    }
+
+    .nontouch .tool:hover.disabled {
+        background-color: rgba(242, 242, 242, 0.98)
+    }
+
+    .swatch-fill {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%
+    }
+
+    .swatch-fill:hover+.swatches {
+        display: block;
+    }
+
+    #menu-trigger {
+        width: 2.3rem;
+        margin-right: 6rem
+    }
+
+    .swatches {
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding-left: 6rem;
+        display: none;
+    }
+
+    .swatches>div {
+        background-color: rgba(242, 242, 242, 0.98);
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        display: -webkit-box;
+        display: -moz-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: box;
+        display: flex;
+        padding: 1rem;
+        border-radius: 4.2rem;
+        -webkit-box-align: center;
+        -moz-box-align: center;
+        -o-box-align: center;
+        -ms-flex-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+
+    .swatches>div img {
+        height: 1.8rem;
+        width: 2rem;
+    }
+
+    .swatches>div img:first-child {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        transform: rotate(180deg)
+    }
+
+    .swatches>div img.disabled {
+        opacity: .5;
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+        filter: alpha(opacity=50);
+        cursor: not-allowed
+    }
+
+    #swatch-wrap {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: box;
+        display: flex;
+        width: 21rem;
+        overflow: hidden;
+        position: relative;
+        padding: .2rem;
+    }
+
+    #swatch-wrap>div {
+        display: -webkit-box;
+        display: -moz-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: box;
+        display: flex;
+        position: relative;
+        -webkit-transition: -webkit-transform 0.2s ease-out;
+        -moz-transition: -moz-transform 0.2s ease-out;
+        -o-transition: -o-transform 0.2s ease-out;
+        -ms-transition: -ms-transform 0.2s ease-out;
+        transition: transform 0.2s ease-out
+    }
+
+    #swatch-wrap .swatch {
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25);
+        width: 2.2rem;
+        height: 2.2rem;
+        border: 2px solid #fff;
+        margin-right: .4rem;
+        border-radius: 50%;
+        min-width: 2.2rem;
+    }
+
+    #swatch-wrap .swatch.active {
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #000;
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #000
+    }
+
+    .nontouch #swatch-wrap .swatch:hover {
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #b3b3b3 !important;
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #b3b3b3 !important;
+    }
+
+    .nontouch #swatch-wrap .swatch:hover.active {
+        -webkit-box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #000 !important;
+        box-shadow: .1rem .1rem 0 rgba(0, 0, 0, 0.25), 0 0 0 1px #000 !important
+    }
+
+    #tools {
+        width: 5.6rem;
+    }
+
+    #tools img {
+        display: block;
+        width: 100%
+    }
+
+    .weight-slider {
+        position: relative;
+    }
+
+    .weight-slider img {
+        width: 112%;
+        left: -4%;
+        position: absolute;
+        pointer-events: none;
+        z-index: -1;
+        -webkit-transform: translateY(-23%);
+        -moz-transform: translateY(-23%);
+        -o-transform: translateY(-23%);
+        -ms-transform: translateY(-23%);
+        transform: translateY(-23%)
+    }
+
+    .weight-slider input {
+        width: 100%;
+        height: 1.5rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        outline: none;
+        margin: .5rem 0;
+        background-color: transparent;
+    }
+
+    .weight-slider input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        height: 2.4rem;
+        width: 1rem;
+        background-color: #3897f0;
+        border: none;
+        border-radius: .2rem
+    }
+
+    .weight-slider input::-moz-range-thumb {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        height: 2.4rem;
+        width: 1rem;
+        background-color: #3897f0;
+        border: none;
+        border-radius: .2rem
+    }
+
+    .weight-slider input::-moz-range-track {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: transparent;
+        outline: none
+    }
+
+    .weight-slider input::-moz-focus-outer {
+        border: none
+    }
+
+
+    #toolbar .swatches {
+        width: 100%;
+        top: auto;
+        bottom: 4.8rem;
+        padding: 0;
+        -webkit-transition: opacity 0.2s ease-out;
+        -moz-transition: opacity 0.2s ease-out;
+        -o-transition: opacity 0.2s ease-out;
+        -ms-transition: opacity 0.2s ease-out;
+        transition: opacity 0.2s ease-out;
+    }
+
+    #toolbar .swatches.hidden {
+        opacity: 0;
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+        filter: alpha(opacity=0);
+        pointer-events: none
+    }
+
+    #toolbar .swatches>div {
+        display: block;
+        padding: 0;
+        background: transparent;
+        -webkit-box-shadow: none;
+        box-shadow: none
+    }
+
+    #toolbar .swatches img {
+        -webkit-transform: rotate3d(0, 0, 1, -90deg);
+        -moz-transform: rotate3d(0, 0, 1, -90deg);
+        -o-transform: rotate3d(0, 0, 1, -90deg);
+        -ms-transform: rotate3d(0, 0, 1, -90deg);
+        transform: rotate3d(0, 0, 1, -90deg);
+        margin: 0 auto;
+        height: 3rem;
+        -webkit-transition: opacity 0.2s ease-out;
+        -moz-transition: opacity 0.2s ease-out;
+        -o-transition: opacity 0.2s ease-out;
+        -ms-transition: opacity 0.2s ease-out;
+        transition: opacity 0.2s ease-out;
+        margin-bottom: -4px;
+    }
+
+    #toolbar .swatches img:last-child {
+        -webkit-transform: rotate3d(0, 0, 1, 90deg);
+        -moz-transform: rotate3d(0, 0, 1, 90deg);
+        -o-transform: rotate3d(0, 0, 1, 90deg);
+        -ms-transform: rotate3d(0, 0, 1, 90deg);
+        transform: rotate3d(0, 0, 1, 90deg)
+    }
+
+    #toolbar .swatches img.disabled {
+        opacity: 0;
+        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+        filter: alpha(opacity=0)
+    }
+
+    #toolbar #swatch-wrap {
+        padding: 0;
+        display: block;
+        width: auto;
+        overflow: hidden;
+        height: 37rem;
+    }
+
+    #toolbar #swatch-wrap>div {
+        display: block;
+        padding: .4rem 0
+    }
+
+    #toolbar #swatch-wrap .swatch {
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto;
+        margin-bottom: .6rem;
+    }
+
+    #toolbar #swatch-wrap .swatch:last-child {
+        margin-bottom: 0
+    }
+</style>
+<div class="container-fluid" onload="pencil()">
+    <div class="toolbar">
+        <a href="#" onclick="pencil()" id="penciltool" class="tool" style="margin-bottom: 4vh;">
+            <img src="https://www.autodraw.com/assets/images/icons/tools/autodraw.svg" draggable="false">
+        </a>
+        <a href="#" onclick="line()" id="linetool" class="tool line" style="margin-bottom: 4vh;">
+            <img src="https://www.autodraw.com/assets/images/icons/tools/pencil.svg" draggable="false">
+        </a>
+        <a href="#" onclick="rectangle()" id="penciltool" class="tool" style="margin-bottom: 4vh;">
+            <img src="https://www.autodraw.com/assets/images/icons/tools/shape.svg" draggable="false">
+        </a>
+        <a href="#" onclick="circle()" id="circletool" class="tool" style="margin-bottom: 4vh;">
+            <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45" width="45" height="45">
+                <title>shape-svg</title>
+                <defs>
+                    <image width="45" height="45" id="img1"
+                        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAtCAMAAAANxBKoAAAAAXNSR0IB2cksfwAAARFQTFRFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaF+5TAAAAFt0Uk5TACBPf5+/QN//MF/669PCtbPPh2BFJBgVj9VpBxDjlUsLJe+vZw5Q24D4wzn0WQU1/OhCkNHAuhmonASZndCxErA4VQLwk6CbIliqeeQpSW9OhnRBKAHg7MiucAqMHAkAAAIsSURBVHicnZV5W7JAFMWHBD1E1GsYLWppaS4ZWkabmWak7fv+/T/Ie8klQWB4Ov/Mw50fhzszlzuMuSVMRURJksTIlDAx51JUjOFXMVEOYKdtVJlRZ+f+zc2qM4r9wrSfb5xm1XktIS/oi/qCnNDm7bfjUS94iWaWV6J6chRJ6omVZYouTbApMk6vrmVc4czaaprsU86oTN+MZz0TzJJPzLHa1DqUDb8NEzYUrI+5UxpKLu8DM5bPKePJiOSc9IVpueQuDh82ASn43AQJ2BwlXeAdslAYpl5EKcKBGYuUUBxYl7e49Fa5b66hsm1waWO7Ao3GOKQqF2asKiFO+aOWy4SgM7kaBEpkZzcEzNjuDqVSx15Qyf9K3kOdmdg/CEUf7MNkMRz6V8i48oeIMeDoOBR9fAQQ3QgFM9b4A33CP0lbxgnRTZy2QtGtUzRZG2Xv/9GtbBltqtfCWSj6rEA1G4XSOQ8Bn3cUUB+ycMFtjyThAhYNXaievculqIquPQC9Sy582QN+TE2kr7j0VZpqivXNr3kHZFwPrBlteemGQ9+UaLP7EizcdgLhzi2s0cZRs1LvAuA7ddSqbBWpH9/7wvfUk4vjgS716AfvpRoP1Nu7zlgdqIiP+gSrP4oV0O/rkmZR8k9V552Rqj5RypY2+UXZpAtJen55bb39PL+1Xl+eqRPD9O4g2jtQ+/j86jVs9b4+P2rAu4fxkG/CqaY/a0v4blsD0mp/u0v5P5yYN9m4ZiLwAAAAAElFTkSuQmCC" />
+                </defs>
+                <style>
+                </style>
+                <use id="Background" href="#img1" x="0" y="0">
+            </svg>
+        </a>
+        <div class="tool swatch">
+            <div style="background-color: #4285f4" class="swatch-fill"> </div>
+            <div class="swatches">
+                <div><img src="https://www.autodraw.com/assets/images/arrow.svg" class="disabled">
+                    <div id="swatch-wrap">
+                        <div style="transform:translateX(-0%)">
+                            <div style="background-color:#4285f4;" onclick="color('#4285f4')" class="swatch active">
+                            </div>
+                            <div style="background-color:#2dd354;" onclick="color('#2dd354')" class="swatch"> </div>
+                            <div style="background-color: #fcd015;" onclick="color('#fcd015')" class="swatch"> </div>
+                            <div style="background-color:#f7931e;" onclick="color('#f7931e')" class="swatch"> </div>
+                            <div style="background-color:#ef4037;" onclick="color('#ef4037')" class="swatch"> </div>
+                            <div style="background-color:#4937ef;" onclick="color('#4937ef')" class="swatch"> </div>
+                            <div style="background-color:#fff;" onclick="color('#fff')" class="swatch"> </div>
+                            <div style="background-color:#000;" onclick="color('#000')" class="swatch"> </div>
+                        </div>
+                    </div>
+                    <img src="https://www.autodraw.com/assets/images/arrow.svg">
+                </div>
+            </div>
+        </div>
+        <a href="#" onclick="eraser()" id="erasertool" class="tool" style="margin-bottom: 4vh;">
+            <img src="https://www.autodraw.com/assets/images/icons/tools/undo.svg" draggable="false">
+        </a>
+        <a href="#" onclick="reset()" id="resettool" class="tool" style="margin-bottom: 4vh;">
+            <img src="https://www.autodraw.com/assets/images/icons/tools/delete.svg" draggable="false">
+        </a>
+
+    </div>
+    <div class="main-canvas-container d-flex p-5 justify-content-center">
+        <canvas id="paint" width="750" height="450"
+            style="-webkit-user-drag: none;user-select: none;-webkit-tap-highlight-color: rgba(0, 0, 0, 0); touch-action: none; cursor: default;background-color: #fff;"></canvas>
+    </div>
+
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script>
+        var canvas = document.getElementById("paint");
+        var ctx = canvas.getContext("2d");
+        var width = canvas.width, height = canvas.height;
+        var curX, curY, prevX, prevY;
+        var hold = false;
+        var fill_value = true, stroke_value = false;
+        var canvas_data = { "pencil": [], "line": [], "rectangle": [], "circle": [], "eraser": [] };
+        ctx.lineWidth = 2;
+
+        function color(color_value) {
+            ctx.strokeStyle = color_value;
+            ctx.fillStyle = color_value;
+        }
+
+        function add_pixel() {
+            ctx.lineWidth += 1;
+        }
+
+        function reduce_pixel() {
+            if (ctx.lineWidth == 2)
+                return;
+            else
+                ctx.lineWidth -= 1;
+        }
+
+        function fill() {
+            fill_value = true;
+            stroke_value = false;
+        }
+
+        function outline() {
+            fill_value = false;
+            stroke_value = true;
+        }
+
+        function reset() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas_data = { "pencil": [], "line": [], "rectangle": [], "circle": [], "eraser": [] };
+        }
+
+        // pencil tool
+
+        function pencil() {
+
+            canvas.onmousedown = function (e) {
+                curX = e.clientX - canvas.offsetLeft;
+                curY = e.clientY - canvas.offsetTop;
+                hold = true;
+
+                prevX = curX;
+                prevY = curY;
+                ctx.beginPath();
+                ctx.moveTo(prevX, prevY);
+            };
+
+            canvas.onmousemove = function (e) {
+                if (hold) {
+                    curX = e.clientX - canvas.offsetLeft;
+                    curY = e.clientY - canvas.offsetTop;
+                    draw();
+                }
+            };
+
+            canvas.onmouseup = function (e) {
+                hold = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                hold = false;
+            };
+
+            function draw() {
+                ctx.lineTo(curX, curY);
+                ctx.stroke();
+                canvas_data.pencil.push({
+                    "startx": prevX, "starty": prevY, "endx": curX, "endy": curY,
+                    "thick": ctx.lineWidth, "color": ctx.strokeStyle
+                });
+            }
+        }
+
+        // line tool
+
+        function line() {
+
+            canvas.onmousedown = function (e) {
+                img = ctx.getImageData(0, 0, width, height);
+                prevX = e.clientX - canvas.offsetLeft;
+                prevY = e.clientY - canvas.offsetTop;
+                hold = true;
+            };
+
+            canvas.onmousemove = function (e) {
+                if (hold) {
+                    ctx.putImageData(img, 0, 0);
+                    curX = e.clientX - canvas.offsetLeft;
+                    curY = e.clientY - canvas.offsetTop;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(curX, curY);
+                    ctx.stroke();
+                    canvas_data.line.push({
+                        "starx": prevX, "starty": prevY, "endx": curX, "endY": curY,
+                        "thick": ctx.lineWidth, "color": ctx.strokeStyle
+                    });
+                    ctx.closePath();
+                }
+            };
+
+            canvas.onmouseup = function (e) {
+                hold = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                hold = false;
+            };
+        }
+
+        // rectangle tool
+
+        function rectangle() {
+
+            canvas.onmousedown = function (e) {
+                img = ctx.getImageData(0, 0, width, height);
+                prevX = e.clientX - canvas.offsetLeft;
+                prevY = e.clientY - canvas.offsetTop;
+                hold = true;
+            };
+
+            canvas.onmousemove = function (e) {
+                if (hold) {
+                    ctx.putImageData(img, 0, 0);
+                    curX = e.clientX - canvas.offsetLeft - prevX;
+                    curY = e.clientY - canvas.offsetTop - prevY;
+                    ctx.strokeRect(prevX, prevY, curX, curY);
+                    if (fill_value) {
+                        ctx.fillRect(prevX, prevY, curX, curY);
+                    }
+                    canvas_data.rectangle.push({
+                        "starx": prevX, "stary": prevY, "width": curX, "height": curY,
+                        "thick": ctx.lineWidth, "stroke": stroke_value, "stroke_color": ctx.strokeStyle, "fill": fill_value,
+                        "fill_color": ctx.fillStyle
+                    });
+
+                }
+            };
+
+            canvas.onmouseup = function (e) {
+                hold = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                hold = false;
+            };
+        }
+
+        // circle tool
+
+        function circle() {
+
+            canvas.onmousedown = function (e) {
+                img = ctx.getImageData(0, 0, width, height);
+                prevX = e.clientX - canvas.offsetLeft;
+                prevY = e.clientY - canvas.offsetTop;
+                hold = true;
+            };
+
+            canvas.onmousemove = function (e) {
+                if (hold) {
+                    ctx.putImageData(img, 0, 0);
+                    curX = e.clientX - canvas.offsetLeft;
+                    curY = e.clientY - canvas.offsetTop;
+                    ctx.beginPath();
+                    ctx.arc(Math.abs(curX + prevX) / 2, Math.abs(curY + prevY) / 2,
+                        Math.sqrt(Math.pow(curX - prevX, 2) + Math.pow(curY - prevY, 2)) / 2, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.stroke();
+                    if (fill_value)
+                        ctx.fill();
+                    canvas_data.circle.push({
+                        "starx": prevX, "stary": prevY, "radius": curX - prevX, "thick": ctx.lineWidth,
+                        "stroke": stroke_value, "stroke_color": ctx.strokeStyle, "fill": fill_value, "fill_color": ctx.fillStyle
+                    });
+                }
+            };
+
+            canvas.onmouseup = function (e) {
+                hold = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                hold = false;
+            };
+        }
+
+        // eraser tool
+
+        function eraser() {
+
+            /*canvas.onmousedown = function (e){
+                hold = true;
+            };
+                
+            canvas.onmousemove = function (e){
+                if (hold){
+                    curX = e.clientX - canvas.offsetLeft;
+                    curY = e.clientY - canvas.offsetTop;
+                    ctx.clearRect(curX, curY, 20, 20);
+                    canvas_data.eraser.push({ "endx": curX, "endy": curY, "thick": ctx.lineWidth });
+                }
+            };
+                
+            canvas.onmouseup = function (e){
+                hold = false;
+            };
+                
+            canvas.onmouseout = function (e){
+                hold = false;
+            };
+            */
+            canvas.onmousedown = function (e) {
+                curX = e.clientX - canvas.offsetLeft;
+                curY = e.clientY - canvas.offsetTop;
+                hold = true;
+
+                prevX = curX;
+                prevY = curY;
+                ctx.beginPath();
+                ctx.moveTo(prevX, prevY);
+            };
+
+            canvas.onmousemove = function (e) {
+                if (hold) {
+                    curX = e.clientX - canvas.offsetLeft;
+                    curY = e.clientY - canvas.offsetTop;
+                    draw();
+                }
+            };
+
+            canvas.onmouseup = function (e) {
+                hold = false;
+            };
+
+            canvas.onmouseout = function (e) {
+                hold = false;
+            };
+
+            function draw() {
+                ctx.lineTo(curX, curY);
+                ctx.strokeStyle = "#ffffff";
+                ctx.stroke();
+                canvas_data.eraser.push({
+                    "startx": prevX, "starty": prevY, "endx": curX, "endy": curY,
+                    "thick": ctx.lineWidth, "color": ctx.strokeStyle
+                });
+            }
+        }
+
+
+
+    </script>
+    <div class="container-fluid">
+        <div class="d-flex" style="    align-items: flex-end;
+            justify-content: flex-end;
+            align-content: flex-end;
+            width: 101%;
+            margin-top: 40%;">
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">Save</h5>
+                    <div class="d-flex">
+                        <input id="fname" class="form-control" required="" type="text">
+                        <button id="save" class="btn btn-primary text-white" onclick="save()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function save() {
+        var filename = document.getElementById("fname").value;
+        var data = JSON.stringify(canvas_data);
+        var image = canvas.toDataURL();
+
+        $.post("/", { save_fname: filename, save_cdata: data, save_image: image });
+        alert(filename + " saved");
+
+    }
+</script>
+{% endblock content %}
